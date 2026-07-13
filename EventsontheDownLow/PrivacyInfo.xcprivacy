@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Apple requires a PrivacyInfo.xcprivacy file for App Store submissions.
+	This app collects no data and does no tracking — everything (events,
+	notes, photos) is stored locally on-device via SQLite/the filesystem,
+	with the one exception of the user-initiated "Save to Photos" action,
+	which writes to the user's own device library and isn't "collection"
+	by Apple's definition (nothing leaves the device to any third party).
+
+	IMPORTANT — verify before submitting:
+	Xcode flags "required reason API" usage at Archive/upload time if any
+	linked API needs a declared reason under NSPrivacyAccessedAPITypes
+	(e.g. certain FileManager timestamp/disk-space APIs, UserDefaults).
+	As of this writing this app doesn't call any of those specific APIs
+	(we use FileManager for basic read/write/delete, not timestamp or
+	disk-space queries), so NSPrivacyAccessedAPITypes is empty below.
+	Re-check this the API list against Apple's current requirements before
+	every submission, since Apple updates the required-reason API list
+	periodically — search "Xcode privacy manifest required reason API"
+	for the current list if unsure.
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>
