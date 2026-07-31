@@ -10,7 +10,7 @@ struct EventsontheDownLowApp: App {
         NotificationScheduler.shared.requestAuthorization()
         BackgroundTaskManager.shared.runStartupMaintenance()
     }
-
+    ///test note
     var body: some Scene {
         WindowGroup {
             ContentView()
