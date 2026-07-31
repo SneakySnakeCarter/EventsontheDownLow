@@ -207,13 +207,18 @@ struct EventRowView: View {
         f.locale = .autoupdatingCurrent
         f.calendar = .autoupdatingCurrent
         f.timeZone = .autoupdatingCurrent
-        // Using a template with "j" (rather than a fixed .dateStyle/.timeStyle
-        // pair) lets the system choose the correct 12-hour vs 24-hour clock
-        // based on the user's actual device setting — Settings > General >
-        // Date & Time > 24-Hour Time — not just what their region/locale
-        // would default to on its own (someone in a normally-12-hour locale
-        // who's manually turned on 24-hour time gets that respected here).
-        f.setLocalizedDateFormatFromTemplate("Mdyjmm")
+        // Deliberately plain .dateStyle/.timeStyle rather than
+        // setLocalizedDateFormatFromTemplate("j...") — that template-based
+        // approach seemed like the more correct way to also respect a
+        // manual 24-hour-clock override, but there's a confirmed Apple bug
+        // (developer.apple.com/forums/thread/722701) where formatters built
+        // from a template silently ignore changes to the newer
+        // Settings > General > Language & Region > Date Format picker
+        // (added iOS 16), while this plain style-based approach correctly
+        // follows both that setting and the 24-hour toggle. Found this the
+        // hard way — worth not "fixing" this back to a template again.
+        f.dateStyle = .short
+        f.timeStyle = .short
         return f
     }()
 }

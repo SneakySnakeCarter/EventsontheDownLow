@@ -208,10 +208,12 @@ final class NotificationScheduler {
         f.locale = .autoupdatingCurrent
         f.calendar = .autoupdatingCurrent
         f.timeZone = .autoupdatingCurrent
-        // "j" lets the system pick 12-hour vs 24-hour based on the user's
-        // actual device setting, not just their region's default — see the
-        // matching comment on EventRowView's singleFormatter.
-        f.setLocalizedDateFormatFromTemplate("Mdyjmm")
+        // Deliberately plain .dateStyle/.timeStyle — see the matching
+        // comment on EventRowView's singleFormatter for why the
+        // template-based "j" approach was reverted (confirmed Apple bug
+        // where it ignores the Language & Region "Date Format" setting).
+        f.dateStyle = .short
+        f.timeStyle = .short
         return f
     }()
 }
