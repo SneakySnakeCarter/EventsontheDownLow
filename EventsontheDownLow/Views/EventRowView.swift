@@ -112,8 +112,21 @@ struct EventRowView: View {
                 .onTapGesture {
                     guard isExpanded else { return }
                     withAnimation(.easeInOut(duration: 0.2)) {
-                        isExpanded.toggle()
+                        isExpanded = false
                     }
+                }
+
+                // Purely a visual cue that this row can be expanded via
+                // long-press — not itself tappable (long-press still lives
+                // on the row content above). Spaced away from the pencil
+                // button below so the two aren't easily confused for one
+                // another.
+                if isExpandable {
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .padding(.trailing, 10)
                 }
 
                 // Tap this to edit the event — expand/collapse moved to the
