@@ -42,7 +42,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Events")
+            .navigationTitle("Events onthe DL")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -80,7 +80,8 @@ struct ContentView: View {
     @ViewBuilder
     private var eventsHelpContent: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HelpItem("Expand", "Long press on event will expand to see any images and notes.")
+            HelpItem("Expand", "Long press on event to expand and see images and notes. If there are no notes or images, event cannot expand.")
+            
             HelpItem("Theming", "This application will follow the light/dark theme for your phone.")
 
              HelpItem("Adding an event","Tap + to create a new event.")
