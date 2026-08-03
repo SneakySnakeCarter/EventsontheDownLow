@@ -94,6 +94,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		22F3DA683020F49C00618F2C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"privacy-policy.html",
+			);
+			target = 220449393005249A001F58BB /* EventsontheDownLow */;
+		};
+		22F3DA693020F49C00618F2C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"privacy-policy.html",
+			);
+			target = 22F837533014FAC400EB6CBC /* NotificationContentExtension */;
+		};
 		22F837663014FAC500EB6CBC /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -111,6 +125,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		22F3DA653020F48300618F2C /* docs */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22F3DA683020F49C00618F2C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 22F3DA693020F49C00618F2C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = docs; sourceTree = "<group>"; };
 		22F837593014FAC500EB6CBC /* NotificationContentExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (22F8376B3014FAE300EB6CBC /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 22F837663014FAC500EB6CBC /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = NotificationContentExtension; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -138,6 +153,7 @@
 		220449313005249A001F58BB = {
 			isa = PBXGroup;
 			children = (
+				22F3DA653020F48300618F2C /* docs */,
 				2204493C3005249A001F58BB /* EventsontheDownLow */,
 				22F837593014FAC500EB6CBC /* NotificationContentExtension */,
 				2204493B3005249A001F58BB /* Products */,
@@ -287,6 +303,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				22F3DA653020F48300618F2C /* docs */,
 				22F837593014FAC500EB6CBC /* NotificationContentExtension */,
 			);
 			name = NotificationContentExtension;
