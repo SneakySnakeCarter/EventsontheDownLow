@@ -25,7 +25,7 @@ enum HelpDrawerMetrics {
 }
 
 /// A simple bold-title + description row, styled for use inside a
-/// HelpDrawer's dark content area. Shared across every page's help content
+/// HelpDrawer's content area. Shared across every page's help content
 /// rather than each page re-declaring its own row layout.
 struct HelpItem: View {
     let title: String
@@ -40,10 +40,10 @@ struct HelpItem: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
             Text(detail)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(.secondary)
         }
     }
 }
@@ -80,7 +80,7 @@ struct HelpDrawer<Content: View>: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(height: currentHeight)
-                .background(Color.black.opacity(0.94))
+                .background(Color(.systemBackground).opacity(0.97))
                 .clipped()
             }
         }
@@ -90,16 +90,16 @@ struct HelpDrawer<Content: View>: View {
     private var handle: some View {
         VStack(spacing: 6) {
             Capsule()
-                .fill(Color.white.opacity(0.7))
+                .fill(Color.secondary.opacity(0.6))
                 .frame(width: 44, height: 3)
             Image(systemName: "chevron.down")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(.secondary)
                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
         }
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity)
-        .background(Color.black)
+        .background(Color(.systemBackground))
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 4)
