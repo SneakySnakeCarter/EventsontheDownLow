@@ -5,6 +5,73 @@ import Foundation
 /// storage so the same logic can run in the UI layer and in a background task.
 enum RecurrenceEngine {
 
+    /// Finds a single event's next relevant occurrence relative to
+    /// `referenceDate`, with **no date ceiling** — unlike `occurrences(for:
+    /// in:_:)`, this never excludes an event just because it's scheduled
+    /// further out than some arbitrary window. Bounded only by iteration
+    /// count (`maxIterations`), which is always fast regardless of how far
+    /// in the future the event falls, since it stops the moment it finds
+    /// one qualifying date rather than enumerating every occurrence up to
+    /// some cutoff.
+    ///
+    /// Prefers the soonest occurrence on/after `referenceDate`; if the
+    /// event (or its recurrence) has already fully ended before
+    /// `referenceDate`, falls back to its last occurrence instead, so
+    /// something is always returned for display purposes rather than nil.
+    static func nextOccurrence(
+        for event: CalendarEvent,
+        onOrAfter referenceDate: Date,
+        calendar: Calendar = .current
+    ) -> EventOccurrence? {
+        let duration = event.endDate.timeIntervalSince(event.startDate)
+
+        guard event.recurrence.isRecurring else {
+            return EventOccurrence(event: event, occurrenceStart: event.startDate, occurrenceEnd: event.endDate)
+        }
+
+        var lastSeen: EventOccurrence?
+        var occurrenceCount = 0
+        var cursor = event.startDate
+        let untilBound = event.recurrence.until
+        let maxIterations = 10_000 // safety valve against malformed rules
+
+        var iterations = 0
+        while iterations < maxIterations {
+            iterations += 1
+            if let untilBound, cursor > untilBound { break }
+
+            if let count = event.recurrence.count, occurrenceCount >= count {
+                break
+            }
+
+            let candidates = weekdayCandidates(for: cursor, rule: event.recurrence, calendar: calendar)
+            for candidateStart in candidates {
+                if let count = event.recurrence.count, occurrenceCount >= count { break }
+                guard candidateStart >= event.startDate else { continue }
+                if let untilBound, candidateStart > untilBound { continue }
+
+                let candidateEnd = candidateStart.addingTimeInterval(duration)
+                let occurrence = EventOccurrence(event: event, occurrenceStart: candidateStart, occurrenceEnd: candidateEnd)
+                occurrenceCount += 1
+
+                if candidateStart >= referenceDate {
+                    // First qualifying occurrence on/after the reference
+                    // date — this is the one we want; stop immediately
+                    // rather than continuing to enumerate further ahead.
+                    return occurrence
+                }
+                lastSeen = occurrence
+            }
+
+            guard let next = advance(cursor, rule: event.recurrence, calendar: calendar) else { break }
+            cursor = next
+        }
+
+        // Nothing upcoming (e.g. a finite series that already ended) —
+        // fall back to the last occurrence we saw, if any.
+        return lastSeen
+    }
+
     static func occurrences(
         for event: CalendarEvent,
         in windowStart: Date,

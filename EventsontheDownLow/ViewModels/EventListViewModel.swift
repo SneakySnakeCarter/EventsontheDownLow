@@ -4,79 +4,46 @@ import Combine
 @MainActor
 final class EventListViewModel: ObservableObject {
     @Published var occurrences: [EventOccurrence] = []
-    @Published var windowStart: Date
-    @Published var windowEnd: Date
 
-    /// Deliberately much wider than the list's own display window — see
-    /// NotificationScheduler's doc comment: it caps scheduling at the
-    /// soonest 60 candidates across all events, so this just needs to
-    /// supply a generous pool for it to pick from, not something tightly
-    /// scoped to what's on screen.
+    /// How far ahead notification scheduling looks. This is separate from
+    /// what the list displays (see reload() below) — notifications
+    /// genuinely need *some* finite bound, since you can't schedule an
+    /// unlimited number of them, and NotificationScheduler further caps
+    /// the actual number sent to iOS at 60 regardless. The list itself has
+    /// no such requirement and is handled without any date ceiling at all
+    /// (see nextOccurrenceReload below).
     private let notificationLookaheadDays = 730 // ~2 years
 
     private let repository = EventRepository.shared
 
     init() {
-        let now = Date()
-        self.windowStart = Calendar.current.date(byAdding: .day, value: -1, to: now) ?? now
-        self.windowEnd = Calendar.current.date(byAdding: .day, value: 60, to: now) ?? now
         reload()
     }
 
     func reload() {
-        let events = repository.fetchEvents(overlapping: windowStart, windowEnd)
-        let allOccurrences = RecurrenceEngine.occurrences(for: events, in: windowStart, windowEnd)
-
-        // The list shows one row per event, not one row per day. Collapse
-        // to the single most-relevant occurrence per event id.
+        // The list shows exactly one row per event — its next relevant
+        // occurrence — with NO date ceiling.
         //
         // HELP DOC NOTE: HELP_DOCUMENTATION_PLAN.md (section 2) flags that
-        // this surprised us during development — worth explicitly telling
-        // users the list shows "next occurrence" for recurring events,
+        // showing "next occurrence" rather than one row per day surprised
+        // us during development — worth explicitly telling users about it,
         // rather than letting them wonder why the date keeps changing.
-        occurrences = Self.collapsedForDisplay(allOccurrences)
+        let now = Date()
+        let allEvents = repository.fetchAll()
+        occurrences = allEvents
+            .compactMap { RecurrenceEngine.nextOccurrence(for: $0, onOrAfter: now) }
+            .sorted { $0.occurrenceStart < $1.occurrenceStart }
 
-        scheduleNotificationsAcrossWideWindow()
+        scheduleNotificationsAcrossWideWindow(events: allEvents, now: now)
     }
 
-    /// Notifications are scheduled from a much wider window than the list
-    /// displays — see notificationLookaheadDays above and
-    /// NotificationScheduler's doc comment for why.
-    private func scheduleNotificationsAcrossWideWindow() {
-        let now = Date()
+    /// Notifications, unlike the list, are scheduled from a wide-but-finite
+    /// window — see notificationLookaheadDays above for why that's fine
+    /// here even though a hard ceiling was the wrong call for the list.
+    private func scheduleNotificationsAcrossWideWindow(events: [CalendarEvent], now: Date) {
         guard let farFuture = Calendar.current.date(byAdding: .day, value: notificationLookaheadDays, to: now) else { return }
-        let notifiableEvents = repository.fetchEvents(overlapping: now, farFuture)
-        let candidateOccurrences = RecurrenceEngine.occurrences(for: notifiableEvents, in: now, farFuture)
+        let candidateOccurrences = RecurrenceEngine.occurrences(for: events, in: now, farFuture)
         NotificationScheduler.shared.scheduleNotifications(for: candidateOccurrences)
-    }
-
-    /// Keeps only one EventOccurrence per underlying event id — preferring
-    /// the soonest upcoming occurrence, or (if none are upcoming within the
-    /// window) the soonest one overall, so recurring events like a daily
-    /// medicine reminder show as a single row instead of one per day.
-    private static func collapsedForDisplay(_ occurrences: [EventOccurrence]) -> [EventOccurrence] {
-        let now = Date()
-        var bestByEventId: [Int64: EventOccurrence] = [:]
-
-        for occurrence in occurrences {
-            guard let id = occurrence.event.id else { continue }
-            guard let existing = bestByEventId[id] else {
-                bestByEventId[id] = occurrence
-                continue
-            }
-
-            let existingIsUpcoming = existing.occurrenceStart >= now
-            let candidateIsUpcoming = occurrence.occurrenceStart >= now
-
-            if candidateIsUpcoming && !existingIsUpcoming {
-                bestByEventId[id] = occurrence
-            } else if candidateIsUpcoming == existingIsUpcoming
-                        && occurrence.occurrenceStart < existing.occurrenceStart {
-                bestByEventId[id] = occurrence
-            }
-        }
-
-        return bestByEventId.values.sorted { $0.occurrenceStart < $1.occurrenceStart }
     }
 
     func addOrUpdate(_ event: CalendarEvent) {

@@ -58,17 +58,34 @@ final class NotificationScheduler {
     /// soonest to fill the gap. This only works if callers pass in a wide
     /// enough candidate window that there's always something to pull in —
     /// see BackgroundTaskManager/EventListViewModel, which both fetch
-    /// occurrences far into the future (not just the ~60 days the on-screen
-    /// list itself displays) specifically to feed this function generously.
+    /// occurrences far into the future specifically to feed this function
+    /// generously (the on-screen list itself has no such window at all —
+    /// see RecurrenceEngine.nextOccurrence).
     func scheduleNotifications(for occurrences: [EventOccurrence]) {
         let center = UNUserNotificationCenter.current()
-        let eventIds = Set(occurrences.compactMap { $0.event.id })
 
         center.getPendingNotificationRequests { requests in
-            let idsToRemove = requests
-                .map(\.identifier)
-                .filter { identifier in eventIds.contains { "event-\($0)-" == String(identifier.prefix("event-\($0)-".count)) } }
-            center.removePendingNotificationRequests(withIdentifiers: idsToRemove)
+            // Clear EVERY pending notification this app has scheduled,
+            // unconditionally — not just ones belonging to events present
+            // in `occurrences`. This function is always called with the
+            // app's complete current set of events (see
+            // EventListViewModel.reload() and BackgroundTaskManager), so
+            // there's never a legitimate reason to preserve a notification
+            // that isn't freshly regenerated below.
+            //
+            // BUG THIS FIXES: the previous version only removed pending
+            // requests whose event id matched one of the events in the
+            // *new* `occurrences` list. That meant a deleted event's old
+            // notifications were never matched (its id no longer appears
+            // anywhere), so they were never cleaned up — a "never ends"
+            // daily reminder kept firing for weeks after its event was
+            // deleted, since each already-scheduled notification just ran
+            // its own course untouched. Every notification this app
+            // schedules uses the "event-<id>-..." identifier scheme, so
+            // it's always safe to wipe all of them here and let the
+            // candidates computed below fully replace them.
+            let allIds = requests.map(\.identifier)
+            center.removePendingNotificationRequests(withIdentifiers: allIds)
 
             let now = Date()
             let candidates: [ReminderCandidate] = occurrences.flatMap { occurrence -> [ReminderCandidate] in
